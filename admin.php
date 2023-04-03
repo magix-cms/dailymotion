@@ -1,4 +1,5 @@
 <?php
+include_once 'dailymotion-sdk-php-master/Dailymotion.php';
 /*
  # -- BEGIN LICENSE BLOCK ----------------------------------
  #
@@ -101,7 +102,51 @@ class plugins_dailymotion_admin extends plugins_dailymotion_db
     private function getItems($type, $id = null, $context = null, $assign = true, $pagination = false) {
         return $this->data->getItems($type, $id, $context, $assign, $pagination);
     }
+    /**
+     * @return array
+     */
+    private function getAuthentication() : array{
+        $data = $this->getItems('root',NULL,'one',false);
+        return [
+            'apikey'    => $data['apikey_dm'],
+            'apisecret' => $data['apisecret_dm'],
+            'username'  => $data['username_dm'],
+            'password'  => $data['password_dm']
+        ];
 
+    }
+    /**
+     * @param $id
+     * @return array
+     * @throws DailymotionAuthRequiredException
+     */
+    private function getImagesUrl($id) : array{
+        $results = [];
+        $aut = $this->getAuthentication();
+        // Scopes you need to run your tests
+        $scopes = array(
+            'read'
+        );
+        // Dailymotion object instanciation
+        $api = new Dailymotion();
+        $access = $api->setGrantType(
+            Dailymotion::GRANT_TYPE_PASSWORD,
+            $aut['apikey'],
+            $aut['apisecret'],
+            $scopes,
+            array(
+                'username' => $aut['username'],
+                'password' => $aut['password'],
+            )
+        );
+        if($access){
+            $results = $api->get(
+                '/video/'.$id,
+                array('fields' => array('thumbnail_360_url', 'thumbnail_720_url'))
+            );
+            return $results;
+        }
+    }
     /**
      * @param $data
      * @throws Exception
@@ -110,6 +155,7 @@ class plugins_dailymotion_admin extends plugins_dailymotion_db
     {
         switch ($data['type']) {
             case 'dailymotion':
+            case 'thumbVideo':
                 parent::update(
                     array(
                         //'context' => $data['context'],
@@ -190,6 +236,34 @@ class plugins_dailymotion_admin extends plugins_dailymotion_db
             switch ($this->action) {
                 case 'edit':
                     $this->save();
+                    break;
+                case 'list':
+                    $videosAll = $this->getItems('videosAll',NULL,'all',false);
+                    $newArr = [];
+                    if(!empty($videosAll)) {
+                        foreach ($videosAll as $key => $value) {
+                            if(!empty($value['video_id_pdn'])) {
+                                $thumbnails = $this->getImagesUrl($value['video_id_pdn']);
+                                /*print '<pre>';
+                                print_r([
+                                    'id' => $value['video_id_pdn'],
+                                    'thumbnail_360_url' => !empty($thumbnails['thumbnail_360_url']) ? $thumbnails['thumbnail_360_url'] : NULL,
+                                    'thumbnail_720_url' => !empty($thumbnails['thumbnail_720_url']) ? $thumbnails['thumbnail_720_url'] : NULL
+                                ]);
+                                print '</pre>';*/
+                                $this->upd(
+                                    [
+                                        'type' => 'thumbVideo',
+                                        'data' => [
+                                            'id' => $value['video_id_pdn'],
+                                            'thumbnail_360_url' => !empty($thumbnails['thumbnail_360_url']) ? $thumbnails['thumbnail_360_url'] : NULL,
+                                            'thumbnail_720_url' => !empty($thumbnails['thumbnail_720_url']) ? $thumbnails['thumbnail_720_url'] : NULL
+                                        ]
+                                    ]
+                                );
+                            }
+                        }
+                    }
                     break;
             }
         }else{

@@ -106,16 +106,17 @@ class plugins_dailymotion_public extends plugins_dailymotion_db
         $videos = [];
 
         if (!empty($rawData)) {
+            foreach ($rawData as $key => $value) {
 
-            if (isset($rawData['id_pdn'])) {
-                $videos = [
-                    'id' => $rawData['id_pdn'],
-                    'video_id' => $rawData['video_id_pdn'],
-                    'name' => $rawData['name_pdn'],
-                    'date' => [
-                        'register' => $rawData['date_register']
-                    ]
-                ];
+                if (isset($value['id_pdn'])) {
+
+                    $videos[$key]['id'] = $value['id_pdn'];
+                    $videos[$key]['video_id'] = $value['video_id_pdn'];
+                    $videos[$key]['thumbnail_360_url'] = $value['thumbnail_360_url'];
+                    $videos[$key]['thumbnail_720_url'] = $value['thumbnail_720_url'];
+                    $videos[$key]['name'] = $value['name_pdn'];
+                    $videos[$key]['date']['register'] = $value['date_register'];
+                }
             }
         }
 
@@ -135,13 +136,10 @@ class plugins_dailymotion_public extends plugins_dailymotion_db
     public function extendProductData(array $data) : array{
         $extend['newRow'] = ['dailymotion' => 'dailymotion'];
         $extend['collection'] = 'dailymotion';
+        if (http_request::isGet('id')) $this->id = form_inputEscape::numeric($_GET['id']);
         if(!empty($data)) {
-            $videoCollection = $this->getitems('videos',['id' => $this->id],'all',false);
-            if(!empty($videoCollection)) {
-                foreach ($videoCollection as &$product) {
-                    $product = $this->extendProduct($product);
-                }
-            }
+            $videoCollection = $this->getitems('videos',['id' => $this->id ?? $data['id_product']],'all',false);
+            $product = $this->extendProduct($videoCollection);
             $extend['data'] = empty($product) ? [] : $product;
         }
         return $extend;

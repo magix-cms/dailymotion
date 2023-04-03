@@ -151,7 +151,28 @@ var dailymotion = (function ($, undefined) {
         }, true);
     }
     return {
-        run: function(globalForm,tableForm){
+        run: function(controller,globalForm,tableForm){
+            $( ".ui-sortable" ).sortable({
+                items: "> tr",
+                cursor: "move",
+                axis: "y",
+                update: function(){
+                    var serial = $( ".ui-sortable" ).sortable('serialize');
+                    $.jmRequest({
+                        handler: "ajax",
+                        url: controller+'&action=edit&edit='+$('input[name="edit"]').val()+'&plugin=dailymotion&mod=order',
+                        method: 'POST',
+                        data : serial,
+                        success:function(e){
+                            $.jmRequest.initbox(e,{
+                                    display: false
+                                }
+                            );
+                        }
+                    });
+                }
+            });
+            $( ".ui-sortable" ).disableSelection();
             if($('#plugins-dailymotion').hasClass('active')) {
                 $('.progress').hide();
                 $('.form-gen').on('submit', function (e) {

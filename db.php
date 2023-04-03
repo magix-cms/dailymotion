@@ -7,10 +7,8 @@ class plugins_dailymotion_db
      * @return mixed|null
      * @throws Exception
      */
-    public function fetchData($config, $params = false)
+    public function fetchData(array $config, array $params = [])
     {
-        if (!is_array($config)) return '$config must be an array';
-
         $sql = '';
         $dateFormat = new component_format_date();
 
@@ -69,11 +67,19 @@ class plugins_dailymotion_db
                     break;
                 case 'videos':
                     $sql = 'SELECT * FROM mc_product_dailymotion
-                            WHERE id_product = :id';
+                            WHERE id_product = :id ORDER BY order_pdn ASC';
+                    break;
+                case 'videosAll':
+                    $sql = 'SELECT * FROM mc_product_dailymotion ORDER BY id_pdn DESC';
                     break;
             }
 
-            return $sql ? component_routing_db::layer()->fetchAll($sql, $params) : null;
+            try {
+                return $sql ? component_routing_db::layer()->fetchAll($sql, $params) : null;
+            }
+            catch (Exception $e) {
+                return 'Exception reçue : '.$e->getMessage();
+            }
         }
 		elseif ($config['context'] === 'one') {
             switch ($config['type']) {
@@ -85,10 +91,11 @@ class plugins_dailymotion_db
                                 WHERE id_product = :id';
                     break;
                 case 'productData':
-                    $sql = "SELECT mcpc.name_p
+                    $sql = "SELECT mcpc.name_p, mpo.bcb_ref_pos
 						FROM mc_catalog_product AS mcp
 						JOIN mc_catalog_product_content AS mcpc ON(mcp.id_product = mcpc.id_product)
 						JOIN mc_lang AS lang ON(mcpc.id_lang = lang.id_lang)
+						LEFT JOIN mc_product_offers mpo on (mcp.id_product = mpo.id_product)
 						WHERE mcp.id_product = :id AND mcpc.id_lang = :default_lang";
                     break;
                 case 'lastVideo':
@@ -98,19 +105,27 @@ class plugins_dailymotion_db
                     $sql = 'SELECT * FROM mc_product_dailymotion
                             WHERE id_pdn = :id';
                     break;
+                case 'videoExist':
+                    $sql = 'SELECT * FROM mc_product_dailymotion
+                            WHERE video_id_pdn = :id';
+                    break;
             }
 
-            return $sql ? component_routing_db::layer()->fetch($sql, $params) : null;
+            try {
+                return $sql ? component_routing_db::layer()->fetch($sql, $params) : null;
+            }
+            catch (Exception $e) {
+                return 'Exception reçue : '.$e->getMessage();
+            }
         }
     }
 
     /**
-     * @param $config
+     * @param array $config
      * @param array $params
-     * @return bool|string
+     * @return string|true
      */
-    public function insert($config,$params = array())
-    {
+    public function insert(array $config, array $params = []) {
         if (!is_array($config)) return '$config must be an array';
 
         $sql = '';
@@ -142,8 +157,7 @@ class plugins_dailymotion_db
      * @param array $params
      * @return bool|string
      */
-    public function update($config,$params = array())
-    {
+    public function update(array $config, array $params = []) {
         if (!is_array($config)) return '$config must be an array';
 
         $sql = '';
@@ -162,9 +176,24 @@ class plugins_dailymotion_db
             case 'productVideo':
                 $sql = 'UPDATE mc_product_dailymotion 
 						SET 
-						    video_id_pdn = :video_id_pdn
+						    video_id_pdn = :video_id_pdn,
+						    thumbnail_360_url = :thumbnail_360_url,
+						    thumbnail_720_url = :thumbnail_720_url
 
                 		WHERE id_pdn = :id';
+                break;
+            case 'thumbVideo':
+                $sql = 'UPDATE mc_product_dailymotion 
+						SET 
+						    thumbnail_360_url = :thumbnail_360_url,
+						    thumbnail_720_url = :thumbnail_720_url
+
+                		WHERE video_id_pdn = :id';
+                break;
+            case 'order':
+                $sql = 'UPDATE mc_product_dailymotion 
+						SET order_pdn = :order_pdn
+                		WHERE id_pdn = :id_pdn';
                 break;
         }
 
@@ -180,12 +209,12 @@ class plugins_dailymotion_db
     }
 
     /**
-     * @param $config
+     * @param array $config
      * @param array $params
      * @return bool|string
      */
-    public function delete($config, $params = array())
-    {
+    public function delete(array $config, array $params = []) {
+
         if (!is_array($config)) return '$config must be an array';
         $sql = '';
 

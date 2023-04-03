@@ -40,7 +40,7 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
 
     protected $template, $modelPlugins, $message, $arrayTools, $data,
         $modelLanguage, $collectionLanguage, $progress;
-    public $controller, $plugins, $plugin, $edit, $id_pdn, $file, $subaction;
+    public $controller, $plugins, $plugin, $edit, $id_pdn, $file, $subaction,$order, $offset;
     public $allowedExts = [
         "mov",
         "mp4",
@@ -70,7 +70,8 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
         if (http_request::isGet('edit')) $this->edit = $formClean->numeric($_GET['edit']);
         if (http_request::isGet('id')) $this->id_pdn = $formClean->simpleClean($_GET['id']);
         elseif (http_request::isPost('id')) $this->id_pdn = $formClean->simpleClean($_POST['id']);
-        if (http_request::isPost('bidData')) $this->bidData = $formClean->arrayClean($_POST['bidData']);
+        if (http_request::isPost('product')) $this->order = $formClean->arrayClean($_POST['product']);
+        if (http_request::isGet('offset')) $this->offset = intval(form_inputEscape::simpleClean($_GET['offset']));
         if (isset($_FILES['file']["name"])) $this->file = $_FILES['file']["name"];
         if (http_request::isGet('mod')) $this->subaction = form_inputEscape::simpleClean($_GET['mod']);
 
@@ -129,6 +130,18 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
     private function upd($data)
     {
         switch ($data['type']) {
+            case 'order':
+                $p = $this->order;
+                for ($i = 0; $i < count($p); $i++) {
+                    parent::update(
+                        ['type'=>$data['type']],
+                        [
+                            'id_pdn' => $p[$i],
+                            'order_pdn' => $i + (isset($this->offset) ? ($this->offset + 1) : 0)
+                        ]
+                    );
+                }
+                break;
             case 'productVideo':
                 parent::update(
                     array(
@@ -218,8 +231,9 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
                     'title'     => $videoTitle,
                     //'tags'      => 'dailymotion,api,sdk,test',
                     'channel'   => $channel,
-                    'published' => false,
+                    'published' => true,
                     'is_created_for_kids' => false,
+                    'private'   => true
                 )
             );
             //$log->tracelog(json_encode($postvideo));
@@ -230,6 +244,38 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
 
     }
 
+    /**
+     * @param $id
+     * @return array
+     * @throws DailymotionAuthRequiredException
+     */
+    private function getImagesUrl($id) : array{
+        $results = [];
+        $aut = $this->getAuthentication();
+        // Scopes you need to run your tests
+        $scopes = array(
+            'read'
+        );
+        // Dailymotion object instanciation
+        $api = new Dailymotion();
+        $access = $api->setGrantType(
+            Dailymotion::GRANT_TYPE_PASSWORD,
+            $aut['apikey'],
+            $aut['apisecret'],
+            $scopes,
+            array(
+                'username' => $aut['username'],
+                'password' => $aut['password'],
+            )
+        );
+        if($access){
+            $results = $api->get(
+                '/video/'.$id,
+                array('fields' => array('thumbnail_360_url', 'thumbnail_720_url'))
+            );
+        }
+        return $results;
+    }
     /**
      * @return void
      * @throws DailymotionApiException
@@ -251,10 +297,11 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
             $defaultLanguage = $this->collectionLanguage->fetchData(array('context' => 'one', 'type' => 'default'));
 
             $productData = $this->getItems('productData', array('id' => $this->edit,'default_lang'=>$defaultLanguage['id_lang']), 'one', false);
+            $videoName = !empty($productData['bcb_ref_pos']) ? $productData['bcb_ref_pos'] : $productData['name_p'];
             $fileUpload = new component_files_upload();
             $resultUpload = $fileUpload->setUploadFile(
                 'file',
-                ['name'=>$prefixName.$productData['name_p']],
+                ['name'=>$prefixName.$videoName],
                 [
                     'upload_root_dir' => 'upload/video', //string
                     'upload_dir' => $this->edit //string ou array
@@ -268,7 +315,7 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
                     'type' => 'productVideo',
                     'data' => [
                         'id_product'=>$this->edit,
-                        'name_pdn'  =>$prefixName.$productData['name_p'],
+                        'name_pdn'  =>$prefixName.$videoName,
                         'video_id_pdn'=> null
                     ]
                 ]);
@@ -283,14 +330,17 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
 
                 //$log->tracelog(json_encode($_FILES));
                 //$log->tracelog(json_encode($resultUpload));
-                $video_id = $this->getPostApi($videoUrl,$prefixName.$productData['name_p']);
+                $video_id = $this->getPostApi($videoUrl,$prefixName.$videoName);
                 $lastVideo = $this->getItems('lastVideo', NULL, 'one', false);
                 if(!empty($video_id)){
+                    $thumbnails = $this->getImagesUrl($video_id);
                     $this->upd([
                         'type' => 'productVideo',
                         'data' => [
                             'id'            =>  $lastVideo['id_pdn'],
-                            'video_id_pdn'  =>  $video_id
+                            'video_id_pdn'  =>  $video_id,
+                            'thumbnail_360_url'=>!empty($thumbnails['thumbnail_360_url']) ? $thumbnails['thumbnail_360_url'] : NULL,
+                            'thumbnail_720_url'=>!empty($thumbnails['thumbnail_720_url']) ? $thumbnails['thumbnail_720_url'] : NULL
                         ]
                     ]);
                     usleep(200000);
@@ -304,7 +354,15 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
                     $this->progress->sendFeedback(array('message' => $this->template->getConfigVars('video_success'), 'progress' => 100, 'status' => 'success', 'result' => $display));
 
                 }else{
+                    $makefile = new filesystem_makefile();
+                    $makefile->remove($videoUrl);
                     //$log->tracelog(json_encode($_FILES));
+                    $this->del([
+                        'type' => 'delVideo',
+                        'data' => [
+                            'id'    =>  $lastVideo['id_pdn']
+                        ]
+                    ]);
                     usleep(200000);
                     $this->progress->sendFeedback(array('message' => $this->template->getConfigVars('error_format'), 'progress' => 100, 'status' => 'error', 'error_code' => 'error_data'));
 
@@ -332,16 +390,19 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
             $newVideo[$key]['name_pdn'] = $item['name_pdn'];
             $newVideo[$key]['url_pdn'] = 'https://www.dailymotion.com/video/'.$item['video_id_pdn'];
             $newVideo[$key]['video_id_pdn'] = $item['video_id_pdn'];
+            $newVideo[$key]['thumbnail_360_url'] = $item['thumbnail_360_url'];
+            $newVideo[$key]['thumbnail_720_url'] = $item['thumbnail_720_url'];
         }
         $this->template->assign('videos',$newVideo);
         $assign = [
             'id_pdn',
-            //'img_tp' => ['title' => 'name','type' => 'bin', 'input' => null, 'class' => ''],
             'name_pdn' => ['title' => 'name'],
             'video_id_pdn' => ['title' => 'name'],
-            'url_pdn' => ['title' => 'name']
+            'url_pdn' => ['title' => 'name'],
+            'thumbnail_360_url'=> ['title' => 'name','type' => 'bin', 'input' => null, 'class' => ''],
+            'thumbnail_720_url' => ['title' => 'name','type' => 'bin', 'input' => null, 'class' => '']
         ];
-        $this->data->getScheme(['mc_product_dailymotion'], ['id_pdn','name_pdn','video_id_pdn'], $assign);
+        $this->data->getScheme(['mc_product_dailymotion'], ['id_pdn','name_pdn','video_id_pdn','thumbnail_360_url','thumbnail_720_url'], $assign);
     }
 
     /**
@@ -352,27 +413,29 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
     private function getDeleteApi($id){
         $video = $this->getItems('videoId',['id' => $id],'one', false);
         if($video != null) {
-            $aut = $this->getAuthentication();
-            // Scopes you need to run your tests
-            $scopes = array(
-                'read', 'write', 'delete', 'manage_videos'
-            );
-            // Dailymotion object instanciation
-            $api = new Dailymotion();
-            $access = $api->setGrantType(
-                Dailymotion::GRANT_TYPE_PASSWORD,
-                $aut['apikey'],
-                $aut['apisecret'],
-                $scopes,
-                array(
-                    'username' => $aut['username'],
-                    'password' => $aut['password'],
-                )
-            );
-            if ($access) {
-                $api->delete(
-                    "/video/{$video['video_id_pdn']}"
+            if($video['video_id_pdn'] != null) {
+                $aut = $this->getAuthentication();
+                // Scopes you need to run your tests
+                $scopes = array(
+                    'read', 'write', 'delete', 'manage_videos'
                 );
+                // Dailymotion object instanciation
+                $api = new Dailymotion();
+                $access = $api->setGrantType(
+                    Dailymotion::GRANT_TYPE_PASSWORD,
+                    $aut['apikey'],
+                    $aut['apisecret'],
+                    $scopes,
+                    array(
+                        'username' => $aut['username'],
+                        'password' => $aut['password'],
+                    )
+                );
+                if ($access) {
+                    $api->delete(
+                        "/video/{$video['video_id_pdn']}"
+                    );
+                }
             }
         }
     }
@@ -416,6 +479,13 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
                                 'data' => [
                                     'id'    =>  $this->id_pdn
                                 ]
+                            ]);
+                        }
+                        break;
+                    case 'order':
+                        if (isset($this->order) && is_array($this->order)) {
+                            $this->upd([
+                                'type' => 'order'
                             ]);
                         }
                         break;

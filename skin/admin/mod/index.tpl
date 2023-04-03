@@ -11,8 +11,8 @@
                     <div id="drop-buttons" class="form-group">
                         <label id="clickHere" class="btn btn-default">
                             ou cliquez ici.. <span class="fa fa-upload"></span>
-                            <input type="hidden" name="MAX_FILE_SIZE" value="20971520" />
-                            <input type="file" id="file" name="file" value="" />
+                            <input type="hidden" name="MAX_FILE_SIZE" value="1073741824" />
+                            <input type="file" id="img" name="file" value="" />
                             <input type="hidden" id="product[id]" name="id" value="{$smarty.get.edit}">
                         </label>
                         <button class="btn btn-main-theme" type="submit" name="action" value="file" disabled>{#send#|ucfirst}</button>
@@ -47,11 +47,12 @@
     {script src=$smarty.capture.scriptForm type="javascript"}
     <script type="text/javascript">
         $(function() {
+            var controller = "{$smarty.server.SCRIPT_NAME}?controller={$smarty.get.controller}";
             if (typeof dailymotion == "undefined") {
                 console.log("dailymotion is not defined");
             } else
             {
-                dailymotion.run(globalForm,tableForm)
+                dailymotion.run(controller,globalForm,tableForm);
             }
         });
     </script>
