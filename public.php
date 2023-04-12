@@ -112,6 +112,7 @@ class plugins_dailymotion_public extends plugins_dailymotion_db
 
                     $videos[$key]['id'] = $value['id_pdn'];
                     $videos[$key]['video_id'] = $value['video_id_pdn'];
+                    $videos[$key]['private_id'] = $value['private_id'];
                     $videos[$key]['thumbnail_360_url'] = $value['thumbnail_360_url'];
                     $videos[$key]['thumbnail_720_url'] = $value['thumbnail_720_url'];
                     $videos[$key]['name'] = $value['name_pdn'];

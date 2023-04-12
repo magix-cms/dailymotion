@@ -271,7 +271,7 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
         if($access){
             $results = $api->get(
                 '/video/'.$id,
-                array('fields' => array('thumbnail_360_url', 'thumbnail_720_url'))
+                array('fields' => array('private_id','thumbnail_360_url', 'thumbnail_720_url'))
             );
         }
         return $results;
@@ -306,10 +306,11 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
                     'upload_root_dir' => 'upload/video', //string
                     'upload_dir' => $this->edit //string ou array
                 ],
-                ['mp4','avi','mpeg'],
+                ['mp4','avi','mpeg','mov','qt'],
                 false
             );
             if($resultUpload){
+                //$log->tracelog(json_encode($resultUpload));
                 // Add video data
                 $this->add([
                     'type' => 'productVideo',
@@ -330,8 +331,12 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
 
                 //$log->tracelog(json_encode($_FILES));
                 //$log->tracelog(json_encode($resultUpload));
-                $video_id = $this->getPostApi($videoUrl,$prefixName.$videoName);
-                $lastVideo = $this->getItems('lastVideo', NULL, 'one', false);
+                if(!empty($videoUrl)){
+                    $video_id = $this->getPostApi($videoUrl,$prefixName.$videoName);
+                    $lastVideo = $this->getItems('lastVideo', NULL, 'one', false);
+                }else{
+                    $video_id = NULL;
+                }
                 if(!empty($video_id)){
                     $thumbnails = $this->getImagesUrl($video_id);
                     $this->upd([
@@ -339,6 +344,7 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
                         'data' => [
                             'id'            =>  $lastVideo['id_pdn'],
                             'video_id_pdn'  =>  $video_id,
+                            'private_id'    => !empty($thumbnails['private_id']) ? $thumbnails['private_id'] : NULL,
                             'thumbnail_360_url'=>!empty($thumbnails['thumbnail_360_url']) ? $thumbnails['thumbnail_360_url'] : NULL,
                             'thumbnail_720_url'=>!empty($thumbnails['thumbnail_720_url']) ? $thumbnails['thumbnail_720_url'] : NULL
                         ]
@@ -390,6 +396,7 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
             $newVideo[$key]['name_pdn'] = $item['name_pdn'];
             $newVideo[$key]['url_pdn'] = 'https://www.dailymotion.com/video/'.$item['video_id_pdn'];
             $newVideo[$key]['video_id_pdn'] = $item['video_id_pdn'];
+            $newVideo[$key]['private_id'] = $item['private_id'];
             $newVideo[$key]['thumbnail_360_url'] = $item['thumbnail_360_url'];
             $newVideo[$key]['thumbnail_720_url'] = $item['thumbnail_720_url'];
         }
@@ -398,11 +405,12 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
             'id_pdn',
             'name_pdn' => ['title' => 'name'],
             'video_id_pdn' => ['title' => 'name'],
+            'private_id'=> ['title' => 'name'],
             'url_pdn' => ['title' => 'name'],
             'thumbnail_360_url'=> ['title' => 'name','type' => 'bin', 'input' => null, 'class' => ''],
             'thumbnail_720_url' => ['title' => 'name','type' => 'bin', 'input' => null, 'class' => '']
         ];
-        $this->data->getScheme(['mc_product_dailymotion'], ['id_pdn','name_pdn','video_id_pdn','thumbnail_360_url','thumbnail_720_url'], $assign);
+        $this->data->getScheme(['mc_product_dailymotion'], ['id_pdn','name_pdn','video_id_pdn','private_id','thumbnail_360_url','thumbnail_720_url'], $assign);
     }
 
     /**

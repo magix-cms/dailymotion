@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS `mc_product_dailymotion` (
     `id_product` int(11) UNSIGNED NOT NULL,
     `name_pdn` varchar(150) NULL,
     `video_id_pdn` varchar(30) NULL,
+    `private_id` varchar(30) NULL,
     `thumbnail_360_url` varchar(180) NULL,
     `thumbnail_720_url` varchar(180) NULL,
     `order_pdn` int(11) UNSIGNED NOT NULL DEFAULT '0',

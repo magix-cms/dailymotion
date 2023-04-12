@@ -136,8 +136,8 @@ class plugins_dailymotion_db
                         VALUE (:apikey_dm, :apisecret_dm, :username_dm, :password_dm, NOW())";
                 break;
             case 'productVideo':
-                $sql = "INSERT INTO mc_product_dailymotion (id_product, name_pdn, video_id_pdn, date_register)
-                        VALUE (:id_product, :name_pdn, :video_id_pdn, NOW())";
+                $sql = 'INSERT INTO mc_product_dailymotion (id_product, name_pdn, video_id_pdn, order_pdn, date_register)
+                        SELECT :id_product, :name_pdn, :video_id_pdn, COUNT(id_pdn), NOW() FROM mc_product_dailymotion WHERE id_product IN ('.$params['id_product'].')';
                 break;
         }
 
@@ -177,6 +177,7 @@ class plugins_dailymotion_db
                 $sql = 'UPDATE mc_product_dailymotion 
 						SET 
 						    video_id_pdn = :video_id_pdn,
+						    private_id = :private_id,
 						    thumbnail_360_url = :thumbnail_360_url,
 						    thumbnail_720_url = :thumbnail_720_url
 
@@ -185,6 +186,7 @@ class plugins_dailymotion_db
             case 'thumbVideo':
                 $sql = 'UPDATE mc_product_dailymotion 
 						SET 
+						    private_id = :private_id,
 						    thumbnail_360_url = :thumbnail_360_url,
 						    thumbnail_720_url = :thumbnail_720_url
 

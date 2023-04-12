@@ -142,7 +142,7 @@ class plugins_dailymotion_admin extends plugins_dailymotion_db
         if($access){
             $results = $api->get(
                 '/video/'.$id,
-                array('fields' => array('thumbnail_360_url', 'thumbnail_720_url'))
+                array('fields' => array('private_id','thumbnail_360_url', 'thumbnail_720_url'))
             );
             return $results;
         }
@@ -256,6 +256,7 @@ class plugins_dailymotion_admin extends plugins_dailymotion_db
                                         'type' => 'thumbVideo',
                                         'data' => [
                                             'id' => $value['video_id_pdn'],
+                                            'private_id' => !empty($thumbnails['private_id']) ? $thumbnails['private_id'] : NULL,
                                             'thumbnail_360_url' => !empty($thumbnails['thumbnail_360_url']) ? $thumbnails['thumbnail_360_url'] : NULL,
                                             'thumbnail_720_url' => !empty($thumbnails['thumbnail_720_url']) ? $thumbnails['thumbnail_720_url'] : NULL
                                         ]
