@@ -16,3 +16,4 @@ Ajouter la ligne suivante dans le tpl du produit où vous souhaitez afficher les
 ````
 {include file="dailymotion/brick/videos.tpl" data=$product.dailymotion}
 ````
+<img width="923" alt="Capture d’écran 2023-04-18 à 09 14 25" src="https://user-images.githubusercontent.com/356674/232702327-c6e3fb9a-f16d-4a12-a2d0-f7a51718500c.png">
