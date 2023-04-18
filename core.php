@@ -181,7 +181,8 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
             'apikey'    => $data['apikey_dm'],
             'apisecret' => $data['apisecret_dm'],
             'username'  => $data['username_dm'],
-            'password'  => $data['password_dm']
+            'password'  => $data['password_dm'],
+            'visibility'=> $data['visibility_dm']
         ];
 
     }
@@ -215,6 +216,25 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
             )
         );
         if($access){
+            switch ($aut['visibility']){
+                case 'public':
+                    $published = true;
+                    $private = false;
+                    break;
+                case 'draft':
+                    $published = false;
+                    $private = false;
+                    break;
+                case 'private':
+                    $published = true;
+                    $private = true;
+                    break;
+                default:
+                    $published = false;
+                    $private = false;
+                    break;
+            }
+
             $filePath = $url;
             $progressUrl = null;
             $url = $api->uploadFile($filePath, null, $progressUrl);
@@ -231,9 +251,9 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
                     'title'     => $videoTitle,
                     //'tags'      => 'dailymotion,api,sdk,test',
                     'channel'   => $channel,
-                    'published' => true,
+                    'published' => $published,
                     'is_created_for_kids' => false,
-                    'private'   => true
+                    'private'   => $private
                 )
             );
             //$log->tracelog(json_encode($postvideo));

@@ -132,8 +132,8 @@ class plugins_dailymotion_db
 
         switch ($config['type']) {
             case 'dailymotion':
-                $sql = "INSERT INTO mc_dailymotion (apikey_dm, apisecret_dm, username_dm, password_dm, date_register)
-                        VALUE (:apikey_dm, :apisecret_dm, :username_dm, :password_dm, NOW())";
+                $sql = "INSERT INTO mc_dailymotion (apikey_dm, apisecret_dm, username_dm, password_dm, visibility_dm, date_register)
+                        VALUE (:apikey_dm, :apisecret_dm, :username_dm, :password_dm, :visibility_dm, NOW())";
                 break;
             case 'productVideo':
                 $sql = 'INSERT INTO mc_product_dailymotion (id_product, name_pdn, video_id_pdn, order_pdn, date_register)
@@ -169,7 +169,8 @@ class plugins_dailymotion_db
 						    apikey_dm = :apikey_dm, 
 							apisecret_dm = :apisecret_dm,
 							username_dm = :username_dm,
-							password_dm = :password_dm
+							password_dm = :password_dm,
+							visibility_dm = :visibility_dm
 
                 		WHERE id_dm = :id_dm';
                 break;

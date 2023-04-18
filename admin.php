@@ -108,10 +108,11 @@ class plugins_dailymotion_admin extends plugins_dailymotion_db
     private function getAuthentication() : array{
         $data = $this->getItems('root',NULL,'one',false);
         return [
-            'apikey'    => $data['apikey_dm'],
-            'apisecret' => $data['apisecret_dm'],
-            'username'  => $data['username_dm'],
-            'password'  => $data['password_dm']
+            'apikey'        => $data['apikey_dm'],
+            'apisecret'     => $data['apisecret_dm'],
+            'username'      => $data['username_dm'],
+            'password'      => $data['password_dm'],
+            'visibility'    => $data['visibility_dm']
         ];
 
     }
@@ -198,6 +199,7 @@ class plugins_dailymotion_admin extends plugins_dailymotion_db
         $newData['apisecret_dm'] = $this->dailyData['apisecret_dm'];
         $newData['username_dm'] = $this->dailyData['username_dm'];
         $newData['password_dm'] = $this->dailyData['password_dm'];
+        $newData['visibility_dm'] = $this->dailyData['visibility_dm'];
 
         if($setData['id_dm']){
 

@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS `mc_dailymotion` (
     `apisecret_dm` varchar(150) NOT NULL,
     `username_dm` varchar(150) NOT NULL,
     `password_dm` varchar(50) NOT NULL,
+    `visibility_dm` enum('public','draft','private') DEFAULT NULL,
     `date_register` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id_dm`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
