@@ -317,7 +317,7 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
             $defaultLanguage = $this->collectionLanguage->fetchData(array('context' => 'one', 'type' => 'default'));
 
             $productData = $this->getItems('productData', array('id' => $this->edit,'default_lang'=>$defaultLanguage['id_lang']), 'one', false);
-            $videoName = !empty($productData['bcb_ref_pos']) ? $productData['bcb_ref_pos'] : $productData['name_p'];
+            $videoName = !empty($productData['reference']) ? $productData['reference'] : $productData['name_p'];
             $fileUpload = new component_files_upload();
             $resultUpload = $fileUpload->setUploadFile(
                 'file',
