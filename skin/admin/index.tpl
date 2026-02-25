@@ -51,7 +51,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="row">
+                            {*<div class="row">
                                 <div class="col-ph-12 col-md-6">
                                     <div class="form-group">
                                         <label for="visibility">{#visibility#|ucfirst} *:</label>
@@ -63,15 +63,15 @@
                                         </select>
                                     </div>
                                 </div>
-                            </div>
+                            </div>*}
                             <div id="submit">
                                 <button class="btn btn-main-theme pull-right" type="submit" name="action" value="edit">{#save#|ucfirst}</button>
                                 {*<button class="btn btn-main-theme pull-right" type="button" id="testApi" name="testApi" value="test">Test</button>*}
                             </div>
                         </form>
-                        <div class="col-md-4">
+                        <div class="col-md-4 block-align">
                             <p class="text-center">
-                            <a href="https://www.dailymotion.com/partner/" class="btn btn-box btn-main-theme targetblank">Dailymotion partner</a>
+                            <a href="https://www.dailymotion.com/partner/" class="btn btn-lg btn-box btn-main-theme targetblank">Dailymotion partner</a>
                             </p>
                         </div>
                     </div>

@@ -145,14 +145,14 @@ class plugins_dailymotion_admin extends plugins_dailymotion_db
                 '/video/'.$id,
                 array('fields' => array('private_id','thumbnail_360_url', 'thumbnail_720_url'))
             );
-            return $results;
         }
+        return $results;
     }
     /**
      * @param $data
      * @throws Exception
      */
-    private function upd($data)
+    /*private function upd($data)
     {
         switch ($data['type']) {
             case 'dailymotion':
@@ -166,24 +166,29 @@ class plugins_dailymotion_admin extends plugins_dailymotion_db
                 );
                 break;
         }
-    }
-
+    }*/
     /**
      * Update data
-     * @param $data
-     * @throws Exception
+     * @param string $type
+     * @param array $params
      */
-    private function add($data)
-    {
-        switch ($data['type']) {
+    private function upd(string $type, array $params) {
+        switch ($type) {
             case 'dailymotion':
-                parent::insert(
-                    array(
-                        //'context' => $data['context'],
-                        'type' => $data['type']
-                    ),
-                    $data['data']
-                );
+            case 'thumbVideo':
+                parent::update($type, $params);
+                break;
+        }
+    }
+    /**
+     * Insert data
+     * @param string $type
+     * @param array $params
+     */
+    private function add(string $type, array $params) {
+        switch ($type) {
+            case 'dailymotion':
+                parent::insert($type, $params);
                 break;
         }
     }
@@ -199,24 +204,19 @@ class plugins_dailymotion_admin extends plugins_dailymotion_db
         $newData['apisecret_dm'] = $this->dailyData['apisecret_dm'];
         $newData['username_dm'] = $this->dailyData['username_dm'];
         $newData['password_dm'] = $this->dailyData['password_dm'];
-        $newData['visibility_dm'] = $this->dailyData['visibility_dm'];
+        //$newData['visibility_dm'] = $this->dailyData['visibility_dm'];
 
         if($setData['id_dm']){
 
             $newData['id_dm'] = $setData['id_dm'];
             $this->upd(
-                array(
-                    'type' => 'dailymotion',
-                    'data' => $newData
-                )
+                'dailymotion',
+                $newData
             );
         }else{
-
             $this->add(
-                array(
-                    'type' => 'dailymotion',
-                    'data' => $newData
-                )
+                'dailymotion',
+                $newData
             );
         }
         //print_r($newData);
@@ -246,27 +246,27 @@ class plugins_dailymotion_admin extends plugins_dailymotion_db
                         foreach ($videosAll as $key => $value) {
                             if(!empty($value['video_id_pdn'])) {
                                 $thumbnails = $this->getImagesUrl($value['video_id_pdn']);
-                                /*print '<pre>';
-                                print_r([
-                                    'id' => $value['video_id_pdn'],
-                                    'thumbnail_360_url' => !empty($thumbnails['thumbnail_360_url']) ? $thumbnails['thumbnail_360_url'] : NULL,
-                                    'thumbnail_720_url' => !empty($thumbnails['thumbnail_720_url']) ? $thumbnails['thumbnail_720_url'] : NULL
-                                ]);
-                                print '</pre>';*/
+
                                 $this->upd(
-                                    [
-                                        'type' => 'thumbVideo',
-                                        'data' => [
+                                    'thumbVideo'
+                                    ,[
                                             'id' => $value['video_id_pdn'],
                                             'private_id' => !empty($thumbnails['private_id']) ? $thumbnails['private_id'] : NULL,
                                             'thumbnail_360_url' => !empty($thumbnails['thumbnail_360_url']) ? $thumbnails['thumbnail_360_url'] : NULL,
                                             'thumbnail_720_url' => !empty($thumbnails['thumbnail_720_url']) ? $thumbnails['thumbnail_720_url'] : NULL
-                                        ]
                                     ]
                                 );
+
                             }
                         }
                     }
+                    /*print '<pre>';
+                    print_r([
+                        'id' => $value['video_id_pdn'],
+                        'thumbnail_360_url' => !empty($thumbnails['thumbnail_360_url']) ? $thumbnails['thumbnail_360_url'] : NULL,
+                        'thumbnail_720_url' => !empty($thumbnails['thumbnail_720_url']) ? $thumbnails['thumbnail_720_url'] : NULL
+                    ]);
+                    print '</pre>';*/
                     break;
             }
         }else{

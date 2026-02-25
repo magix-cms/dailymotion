@@ -1,0 +1,34 @@
+// Compiler options
+@import (reference) "mixins";
+// --- Variables (Optionnelles, mais pratiques) ---
+@video-margin: 20px;
+@overlay-height: 80px;
+@overlay-zindex: 10;
+
+// --- Styles de la galerie vidéo ---
+.video-gallery {
+
+  .video-wrapper {
+    margin-bottom: @video-margin;
+    position: relative; // Indispensable pour garder l'overlay à l'intérieur de la vidéo
+
+    // Le bouclier transparent contre le clic droit
+    .video-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: @overlay-height;
+      z-index: @overlay-zindex;
+
+      // background-color: rgba(255, 0, 0, 0.2); /* Décommentez pour visualiser la zone protégée pendant vos tests */
+    }
+
+    // Le lecteur iframe
+    .protected-video {
+      /* Ajoutez ici des styles spécifiques à l'iframe si nécessaire (bordures, ombres, etc.) */
+      border-radius: 4px; // Exemple d'arrondi
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1); // Exemple d'ombre
+    }
+  }
+}

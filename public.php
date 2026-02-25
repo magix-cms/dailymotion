@@ -116,6 +116,7 @@ class plugins_dailymotion_public extends plugins_dailymotion_db
                     $videos[$key]['thumbnail_360_url'] = $value['thumbnail_360_url'];
                     $videos[$key]['thumbnail_720_url'] = $value['thumbnail_720_url'];
                     $videos[$key]['name'] = $value['name_pdn'];
+                    $videos[$key]['visibility'] = $value['visibility_pdm'];
                     $videos[$key]['date']['register'] = $value['date_register'];
                 }
             }
