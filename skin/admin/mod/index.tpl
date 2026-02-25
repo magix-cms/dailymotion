@@ -37,6 +37,18 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="col-md-4 col-sm-12">
+                            <div class="form-group">
+                                <label for="video_channel">Catégorie Dailymotion *:</label>
+                                <select name="video_channel" id="video_channel" class="form-control required" required>
+                                    <option value="tech">Informatique / Tech</option>
+                                    <option value="school">Formation / Éducation</option>
+                                    <option value="lifestyle">Lifestyle</option>
+                                    <option value="news">Actualités</option>
+                                    <option value="fun">Humour</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">

@@ -40,7 +40,7 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
 
     protected $template, $modelPlugins, $message, $arrayTools, $data,
         $modelLanguage, $collectionLanguage, $progress;
-    public $controller, $plugins, $plugin, $edit, $id_pdn, $file, $subaction,$order, $offset, $video_visibility;
+    public $controller, $plugins, $plugin, $edit, $id_pdn, $file, $subaction,$order, $offset, $video_visibility, $video_channel;
     public $allowedExts = [
         "mov",
         "mp4",
@@ -75,6 +75,7 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
         if (isset($_FILES['file']["name"])) $this->file = $_FILES['file']["name"];
         if (http_request::isGet('mod')) $this->subaction = form_inputEscape::simpleClean($_GET['mod']);
         if (http_request::isPost('video_visibility')) $this->video_visibility = $formClean->simpleClean($_POST['video_visibility']);
+        if (http_request::isPost('video_channel')) $this->video_channel = $formClean->simpleClean($_POST['video_channel']);
     }
     /**
      * Method to override the name of the plugin in the admin menu
@@ -173,11 +174,12 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
      * @param string $url
      * @param string $title
      * @param string $visibility
+     * @param string $channel
      * @return mixed|void
      * @throws DailymotionApiException
      * @throws DailymotionAuthRequiredException
      */
-    private function getPostApi(string $url, string $title, string $visibility = 'private') {
+    private function getPostApi(string $url, string $title, string $visibility = 'private', string $channel = 'tech') {
         $log = new debug_logger(MP_LOG_DIR);
         $aut = $this->getAuthentication();
 
@@ -203,7 +205,7 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
             $videoData = array(
                 'url'       => $urlUpload,
                 'title'     => $title,
-                'channel'   => 'auto',
+                'channel'   => $channel,
                 'published' => $isPublished,
                 'is_created_for_kids' => false,
                 'private'   => $isPrivate
@@ -317,7 +319,12 @@ class plugins_dailymotion_core extends plugins_dailymotion_db
                 //$log->tracelog(json_encode($_FILES));
                 //$log->tracelog(json_encode($resultUpload));
                 if(!empty($videoUrl)){
-                    $video_id = $this->getPostApi($videoUrl,$prefixName.$videoName, $chosenVisibility);
+                    $video_id = $this->getPostApi(
+                        $videoUrl,
+                        $prefixName.$videoName,
+                        $chosenVisibility,
+                        $this->video_channel
+                    );
                     $lastVideo = $this->getItems('lastVideo', NULL, 'one', false);
                 }else{
                     $video_id = NULL;
